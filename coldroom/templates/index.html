@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>ParaLabz ColdRoom</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body data-mode="{{ mode }}">
+
+<header class="top">
+  <div class="brand">
+    <span class="ep">ParaLabz #03</span>
+    <h1>ColdRoom</h1>
+    <p class="sub">IoT access control &amp; defensive engineering &mdash; beginner teaching model</p>
+  </div>
+  <div id="mode-badge" class="mode-badge mode-{{ mode }}" role="status">
+    {% if insecure %}MODE: INSECURE TEACHING MODE{% else %}MODE: PROTECTED{% endif %}
+  </div>
+</header>
+
+{% if insecure %}
+<div class="warn-bar" role="alert">
+  <strong>WARNING &mdash; ACCESS CONTROL IS INTENTIONALLY MISSING.</strong>
+  Any local client can change the simulated setpoint. Teaching mode only; restart without <code>--demo-insecure</code> to leave it.
+</div>
+{% endif %}
+
+<noscript><p class="warn-bar">This page needs JavaScript (local file only, no external scripts).</p></noscript>
+<p id="conn" class="conn-lost" role="alert" hidden>Cannot reach the local app. Is it still running in the terminal?</p>
+
+<main class="grid">
+
+  <section id="scene-panel" class="panel area-scene" aria-labelledby="h-room">
+    <h2 id="h-room">Cold room</h2>
+    <canvas id="scene" width="160" height="100" role="img"
+      aria-label="Pixel-art refrigerator with open door, shelves, a cooling fan and a wall display showing the simulated temperature"></canvas>
+    <div id="cooling-bar" class="cooling-bar" aria-hidden="true"></div>
+  </section>
+
+  <section class="panel area-readouts" aria-labelledby="h-read">
+    <h2 id="h-read">Fridge status</h2>
+    <div class="cards">
+      <div class="card">
+        <span class="label">Target setpoint (requested)</span>
+        <span class="value setpoint" id="v-setpoint">&ndash;</span>
+      </div>
+      <div class="card">
+        <span class="label">Measured (simulated)</span>
+        <span class="value measured" id="v-measured">&ndash;</span>
+      </div>
+      <div class="card">
+        <span class="label">Cooling / defrost</span>
+        <span class="value phase" id="v-phase">&ndash;</span>
+        <span class="small" id="v-compressor"></span>
+        <span class="small" id="v-defrost"></span>
+      </div>
+      <div class="card" id="card-alarm">
+        <span class="label">Alarm</span>
+        <span class="value phase" id="v-alarm">&ndash;</span>
+        <span class="small" id="v-alarm-range"></span>
+      </div>
+    </div>
+    <p class="note">{{ model_note }}</p>
+  </section>
+
+  <section class="panel area-chart" aria-labelledby="h-chart">
+    <h2 id="h-chart">Temperature history (last 5 min)</h2>
+    <canvas id="chart" role="img" aria-label="Line chart of measured temperature and setpoint over the last five minutes"></canvas>
+  </section>
+
+  <section class="panel area-operator" aria-labelledby="h-op">
+    <h2 id="h-op">Operator panel</h2>
+    {% if insecure %}
+    <p class="danger-box"><strong>No token is needed here.</strong> That is the intentional flaw: the setpoint endpoint has no access control. Values are still limited to {{ '%g'|format(global_min) }} to {{ '%g'|format(global_max) }} &deg;C.</p>
+    {% else %}
+    <label for="token-input">Operator token (printed in the terminal at startup)</label>
+    <div class="row">
+      <input id="token-input" type="password" autocomplete="off" spellcheck="false">
+      <button id="token-use" type="button">Use token</button>
+      <button id="token-clear" type="button" class="secondary">Forget</button>
+    </div>
+    <p id="token-state" class="small">No token in memory. It is never stored, only held in this page&rsquo;s memory.</p>
+    {% endif %}
+
+    <label for="sp-input">New setpoint (&deg;C)</label>
+    <div class="row">
+      <input id="sp-input" type="number" step="0.5" inputmode="decimal" value="-18">
+      <button id="sp-apply" type="button">Apply setpoint</button>
+    </div>
+    <p id="op-result" class="result" role="status" aria-live="polite"></p>
+    {% if insecure %}
+    <p class="small">Enforced here: global simulation range only. No operating policy.</p>
+    {% else %}
+    <p class="small">Demo policy: {{ '%g'|format(policy_min) }} to {{ '%g'|format(policy_max) }} &deg;C. {{ policy_note }}</p>
+    {% endif %}
+  </section>
+
+  <section class="panel area-audit" aria-labelledby="h-audit">
+    <h2 id="h-audit">Audit log (latest 10, UTC)</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Time</th><th>Action</th><th>Outcome</th><th>Requested</th></tr></thead>
+        <tbody id="audit-body"></tbody>
+      </table>
+    </div>
+    <p class="small">Bounded, in memory, never contains secrets.</p>
+  </section>
+
+  <section class="panel area-learn" aria-labelledby="h-learn">
+    <h2 id="h-learn">Learning panel</h2>
+    <p class="small">A beginner teaching model &mdash; not production-secure, not a pentest qualification. Checkboxes are not saved.</p>
+    <ol class="tasks">
+      <li><label><input type="checkbox"> <strong>Read the scope.</strong></label>
+        Read the disclaimer at the bottom and the mode badge. This app listens only on <code>http://127.0.0.1:5000</code> (this computer only).</li>
+      <li><label><input type="checkbox"> <strong>Inspect the status endpoint.</strong></label>
+        Open <a href="/api/status" target="_blank" rel="noopener">/api/status</a>. Find the mode, the limits, the requested setpoint and the measured temperature.</li>
+      <li><label><input type="checkbox"> <strong>Insecure run: change the setpoint without authorization.</strong></label>
+        With <code>--demo-insecure</code>, run this one request from the project folder (in Windows PowerShell type <code>curl.exe</code>):
+        <pre>{{ example_command }}</pre></li>
+      <li><label><input type="checkbox"> <strong>Observe requested vs measured.</strong></label>
+        The setpoint jumps at once; the measured temperature moves gradually. Watch the chart and the alarm.</li>
+      <li><label><input type="checkbox"> <strong>Restart in protected mode.</strong></label>
+        Stop the app (Ctrl+C) and start it without <code>--demo-insecure</code>. The mode cannot be switched from the browser.</li>
+      <li><label><input type="checkbox"> <strong>Protected run: same change, no token.</strong></label>
+        Repeat the same request. Expect HTTP 401.</li>
+      <li><label><input type="checkbox"> <strong>Authenticate and make an allowed change.</strong></label>
+        Paste the terminal token into the operator panel, click Use token, apply <code>-20</code>.</li>
+      <li><label><input type="checkbox"> <strong>Out-of-policy change.</strong></label>
+        With the token, apply <code>-10</code>. Expect HTTP 422 <code>out_of_policy</code>.</li>
+      <li><label><input type="checkbox"> <strong>Explain the difference.</strong></label>
+        <details>
+          <summary>Authentication, authorization, validation, safety limits</summary>
+          <dl>
+            <dt>Authentication</dt><dd>Who is calling? Here: a valid operator token.</dd>
+            <dt>Authorization</dt><dd>Is this caller allowed to do this action? Insecure mode skips this check on purpose.</dd>
+            <dt>Input validation</dt><dd>Is the request well-formed: JSON, a finite number, inside the global range?</dd>
+            <dt>Operational safety limit</dt><dd>Is the value acceptable to operate with? A policy applied even to authenticated users.</dd>
+          </dl>
+        </details></li>
+    </ol>
+  </section>
+
+</main>
+
+<footer class="disclaimer" role="note">{{ disclaimer }}</footer>
+</body>
+</html>

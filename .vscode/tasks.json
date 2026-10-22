@@ -1,0 +1,33 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "ColdRoom: protected (default)",
+      "type": "shell",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe app.py",
+      "windows": { "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe app.py" },
+      "linux": { "command": "${workspaceFolder}/.venv/bin/python app.py" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "ColdRoom: INSECURE teaching mode",
+      "type": "shell",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe app.py --demo-insecure",
+      "windows": { "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe app.py --demo-insecure" },
+      "linux": { "command": "${workspaceFolder}/.venv/bin/python app.py --demo-insecure" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "ColdRoom: run tests",
+      "type": "shell",
+      "windows": { "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe -m pytest -q" },
+      "linux": { "command": "${workspaceFolder}/.venv/bin/python -m pytest -q" },
+      "command": "python -m pytest -q",
+      "problemMatcher": []
+    }
+  ]
+}
