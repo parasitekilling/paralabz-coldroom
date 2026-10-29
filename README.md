@@ -1,26 +1,15 @@
-# ParaLabz ColdRoom
+# ParaLabz ColdRoom: Access Control & Command Injection Lab
 
-> Local educational simulation. No physical devices connected.
-> Not a reproduction of the French refrigeration attack.
+> **Security Portfolio Project:** A source-assisted assessment of an intentionally vulnerable local Flask teaching application, including manual verification of protected-mode controls in a controlled lab environment.
 
-A small, **local-only** teaching app for *ParaLabz #03* (IoT access control and defensive engineering). It simulates a pixel-art cold room and lets you compare two ways of running the same "change the setpoint" endpoint:
+This repository contains a local-only Flask simulation used to compare insecure access control against protected-mode defenses. It is a teaching exercise, not a real industrial refrigeration system or production deployment. 
 
-| Mode | How to start | What it teaches |
-|---|---|---|
-| **Protected** (default) | `python app.py` | token authentication, input validation, an operating-policy limit, rate limiting, audit log |
-| **Insecure teaching mode** | `python app.py --demo-insecure` | what *missing authorization* on one endpoint looks like |
+🎯 **[Read the Vulnerability Assessment Report (REPORT.md)](REPORT.md)**
 
-It is a **beginner teaching model**. It is not production-secure and not a pentest qualification.
-
-## Scope
-
-- Nothing here connects to a physical device, a manufacturer controller, or any public target.
-- No exploit, no scanner, no brute-force tool, no credential list.
-- No CDNs, external APIs, analytics, telemetry, Docker or cloud. Local assets only.
-- Binds to `127.0.0.1:5000` only. There is no `--host`/`--port` option. Debug mode and the reloader are always off.
-- The mode is fixed at startup. **No endpoint can change it; you must restart.**
-- The simulation is illustrative (a thermostat with leakage and a periodic defrost), not engineering-accurate.
-
+## Scope & Safety
+- **Target:** Local app (`127.0.0.1:5000`). No real hardware or public targets.
+- **Purpose:** To demonstrate missing authorization and command injection in a safe sandbox.
+- **Modes:** Compares "Insecure Teaching Mode" (vulnerable) with "Protected Mode" (defensive baseline).
 ## Quick start on Windows 11 + VS Code (lightest path)
 
 You need only **Python 3.10+** from python.org (a normal per-user install, no admin needed) and VS Code. No Docker, no Node.
